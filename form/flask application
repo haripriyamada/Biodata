@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Details Form</title>
+</head>
+<body>
+    <h1>Enter User Details</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="post">
+        <label>First Name:</label>
+        <input type="text" name="first_name" required><br><br>
+        <label>Last Name:</label>
+        <input type="text" name="last_name" required><br><br>
+        <label>Phone Number:</label>
+        <input type="text" name="phone_number" required><br><br>
+        <label>Email ID:</label>
+        <input type="email" name="email" required><br><br>
+        <label>Address:</label>
+        <textarea name="address" required></textarea><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

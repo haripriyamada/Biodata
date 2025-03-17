@@ -1,0 +1,73 @@
+from flask import Flask, render_template, request, redirect, flash
+import sqlite3
+import re
+
+app = Flask(__name__)
+app.secret_key = "secret_key"  # For flash messages
+
+# Database setup
+DATABASE = 'user_details.db'
+
+def init_db():
+    with sqlite3.connect(DATABASE) as conn:
+        conn.execute('''CREATE TABLE IF NOT EXISTS UserDetails (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            phone_number TEXT NOT NULL,
+            email TEXT NOT NULL,
+            address TEXT NOT NULL
+        )''')
+
+# Home route with form
+@app.route("/", methods=["GET", "POST"])
+def home():
+    if request.method == "POST":
+        # Extract form data
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
+        phone_number = request.form["phone_number"]
+        email = request.form["email"]
+        address = request.form["address"]
+
+        # Validation
+        if not first_name.isalpha():
+            flash("First name must contain only alphabets.")
+            return redirect("/")
+        if not last_name.isalpha():
+            flash("Last name must contain only alphabets.")
+            return redirect("/")
+        if not phone_number.isdigit() or len(phone_number) != 10:
+            flash("Phone number must be a 10-digit number.")
+            return redirect("/")
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            flash("Invalid email format.")
+            return redirect("/")
+        if not address.strip():
+            flash("Address cannot be empty.")
+            return redirect("/")
+
+        # Save to database
+        with sqlite3.connect(DATABASE) as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO UserDetails (first_name, last_name, phone_number, email, address) VALUES (?, ?, ?, ?, ?)",
+                           (first_name, last_name, phone_number, email, address))
+            conn.commit()
+
+        flash("User details added successfully!")
+        return redirect("/")
+
+    return render_template("form.html")
+
+# Display stored user details
+@app.route("/users")
+def users():
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM UserDetails")
+        data = cursor.fetchall()
+    return render_template("users.html", data=data)
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True)
